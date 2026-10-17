@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <Keyword>MFCProj</Keyword>
+    <ProjectGuid>{00EE36F9-E3AB-414F-A8BD-3F2E00DAFC3D}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.22000.0</WindowsTargetPlatformVersion>
+    <ProjectName>GTIODriverOPCUAServer</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PlatformToolset>v141</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <SpectreMitigation>false</SpectreMitigation>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>../../../Release_32/</OutDir>
+    <IntDir>.\Release\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>../../../../Release_32/IODrivers/OPCUA/</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>../../../../Release_64/IODrivers/OPCUA/</OutDir>
+    <TargetName>DataCollect_OPCUAServer</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>../../../07_Public/02_include/Include;../../../07_Public/02_include/OpenInclude/OpenUtil;../../../07_Public/02_include/OpenInclude;../../../07_Public/02_include/OpenInclude/lua-5.3.3_src;../../../07_Public/02_include/OpenInclude/OpenGE;../../../07_Public/02_include/Include/NetBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BrowseInformation>true</BrowseInformation>
+      <PrecompiledHeaderOutputFile>.\Debug\GTIODriverModbusTCPMaster.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\Debug\GTIODriverModbusTCPMaster.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Debug\GTIODriverModbusTCPMaster.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <LinkDLL>true</LinkDLL>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>../../../07_Public/01_lib/x86/GTIODriverModbusTCPMaster.lib</ImportLibrary>
+      <AdditionalLibraryDirectories>../../../07_Public/01_lib/x86;../../../07_Public/01_lib;../../../07_Public/01_lib/OtherLib/x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>PrivateUtilLib.lib;Openlib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>../../../07_Public/02_include/Include;../../../07_Public/02_include/OpenInclude/OpenUtil;../../../07_Public/02_include/OpenInclude;../../../07_Public/02_include/OpenInclude/lua-5.3.3_src;../../../07_Public/02_include/OpenInclude/OpenGE;../../../07_Public/02_include/Include/NetBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BrowseInformation>true</BrowseInformation>
+      <PrecompiledHeaderOutputFile>.\Debug\GTIODriverModbusTCPMaster.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\Debug\GTIODriverModbusTCPMaster.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Debug\GTIODriverModbusTCPMaster.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <LinkDLL>true</LinkDLL>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>../../../07_Public/01_lib/x86/GTIODriverModbusTCPMaster.lib</ImportLibrary>
+      <AdditionalLibraryDirectories>../../../07_Public/01_lib/x86;../../../07_Public/01_lib;../../../07_Public/01_lib/OtherLib/x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>PrivateUtilLib.lib;Openlib.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>./include/xmlparsercpp;./include/uastack;./include/uaservercpp;./include/uapkicpp;./include/uamodels;./include/uaclientcpp;./include/uabasecpp;./include/openssl;./include/libxml2/libxml;../../../../005_Public/002_include/002_Include;../../../../005_Public/002_include/003_OpenInclude/OpenUtil;../../../../005_Public/002_include/003_OpenInclude;../../../../006_ThirdParty/002_lua-5.3.3_src/src;../../../../005_Public/002_include/003_OpenInclude/OpenGE;../../../../005_Public/002_include/002_Include/NetBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_USE_32BIT_TIME_T;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>./lib/x86;../../../../005_Public/001_lib/x86;../../../../005_Public/001_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Private_OTComm.lib;Openlib.lib;ws2_32.lib;coremodule.lib;uabasecpp.lib;uaclientcpp.lib;uamodels.lib;uamodule.lib;uastack.lib;uapkicpp.lib;xmlparsercpp.lib;libcrypto.lib;libssl.lib;libxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>../../../../005_Public/001_lib/x86/GTIODriverOPCUAServer.lib</ImportLibrary>
+      <ProgramDatabaseFile>../../../../Release_32/GTIODriverOPCUAServer.pdb</ProgramDatabaseFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>./include/xmlparsercpp;./include/uastack;./include/uaservercpp;./include/uapkicpp;./include/uamodels;./include/uabasecpp;./include/openssl;./include/libxml2/libxml;../../../../005_Public/002_include/002_Include;../../../../005_Public/002_include/003_OpenInclude/OpenUtil;../../../../005_Public/002_include/003_OpenInclude;../../../../006_ThirdParty/002_lua-5.3.3_src/src;../../../../07_Public/02_include/OpenInclude/OpenGE;../../../../005_Public/002_include/002_Include/NetBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>Disabled</Optimization>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>./lib/x64;../../../../005_Public/001_lib/x64;../../../../005_Public/001_lib;../../../../005_Public/001_lib/OtherLib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>CommunitcateLib_OT.lib;BasicDataStruct.lib;ws2_32.lib;coremodule.lib;uabasecpp.lib;uamodels.lib;uamodule.lib;uastack.lib;uapkicpp.lib;xmlparsercpp.lib;libcrypto.lib;libssl.lib;libxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>../../../../005_Public/001_lib/x64/GTIODriverOPCUAServer.lib</ImportLibrary>
+      <ProgramDatabaseFile>../../../../Release_64/GTIODriverOPCUAServer.pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="GTIODriverOPCUAServer.cpp" />
+    <ClCompile Include="myappcallback.cpp" />
+    <ClCompile Include="myappnodemanager.cpp" />
+    <ClCompile Include="OPCUAFrame.cpp" />
+    <ClCompile Include="OPCUAMaster.cpp" />
+    <ClCompile Include="OPCUASlave.cpp" />
+    <ClCompile Include="OPCUATag.cpp" />
+    <ClCompile Include="shutdownsignal.cpp" />
+    <ClCompile Include="uagatewayapplicationcallback.cpp" />
+    <ClCompile Include="uagatewaynodemanager.cpp" />
+    <ClCompile Include="uagatewayserver.cpp" />
+    <ClCompile Include="uagatewayvariable.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GTIODriverOPCUAServer.h" />
+    <ClInclude Include="myappcallback.h" />
+    <ClInclude Include="myappnodemanager.h" />
+    <ClInclude Include="OPCUAFrame.h" />
+    <ClInclude Include="OPCUAMaster.h" />
+    <ClInclude Include="OPCUASlave.h" />
+    <ClInclude Include="OPCUATag.h" />
+    <ClInclude Include="shutdownsignal.h" />
+    <ClInclude Include="uagatewayapplicationcallback.h" />
+    <ClInclude Include="uagatewaynodemanager.h" />
+    <ClInclude Include="uagatewayserver.h" />
+    <ClInclude Include="uagatewayvariable.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
