@@ -9,6 +9,26 @@
 #include "TagManagerClient.h"
 #include "IODriverManager.h"
 #include "OPCUATag.h"
+
+#if OPCUA_DIAG_LOG
+// Build stamp printed in every host-call log, to prove which DLL build is loaded.
+#define OPCUA_DIAG_BUILD "diag-v3 " __DATE__ " " __TIME__
+
+// Logs (throttled) that the host IOServer called one of the exported IODriver* functions.
+static void OpcUaDiagHostCall(COPCUAMaster* pMaster, const char* func, DWORD& tick, bool& first, unsigned int& calls)
+{
+	calls++;
+	if (NULL == pMaster || NULL == pMaster->m_pSetLogInfo) return;
+	if (!OpcUaDiagDue(tick, first)) return;
+	char szDiag[512];
+	sprintf(szDiag, "[DIAG host-call] %s calls=%u (%s)", func, calls, OPCUA_DIAG_BUILD);
+	pMaster->m_pSetLogInfo(pMaster->m_handle, INFOTYPE_RUN, pMaster->m_log_Source, szDiag, szDiag, true, true);
+}
+#define OPCUA_DIAG_HOST_CALL(pMaster, func) \
+	{ static DWORD s_t = 0; static bool s_f = true; static unsigned int s_c = 0; OpcUaDiagHostCall(pMaster, func, s_t, s_f, s_c); }
+#else
+#define OPCUA_DIAG_HOST_CALL(pMaster, func)
+#endif
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -87,13 +107,16 @@ bool  IODriverInit(void*handle,void*&driverContext,char*cmdLine,fpAddTag AddTag,
 	pOPCMaster->m_pMastertThreadRunningFlag = MastertThreadRunningFlag;
 	pOPCMaster->m_pInitMemQuality = InitMemQuality;
 	pOPCMaster->m_pMastertThreadRunningFlag(handle, true);
-	return pOPCMaster->Init(handle,driverContext,cmdLine,AddTag);
+	bool bInit = pOPCMaster->Init(handle,driverContext,cmdLine,AddTag);
+	OPCUA_DIAG_HOST_CALL(pOPCMaster, bInit ? "IODriverInit(ok)" : "IODriverInit(FAILED)");
+	return bInit;
 }
 
 void IODriverInitQuality(void* handle, void* driverContext)
 {
 	COPCUAMaster *pMaster = (COPCUAMaster *)driverContext;
 	CIODriverManager *pCIODriverManager = (CIODriverManager*)handle;
+	OPCUA_DIAG_HOST_CALL(pMaster, "IODriverInitQuality");
 	for (int i = 0; i < pMaster->m_tagNumerI; i++)
 	{
 		CTag* pTag = pMaster->m_OPCTagI[i]->m_pTag;
@@ -104,6 +127,7 @@ void IODriverInitQuality(void* handle, void* driverContext)
 int  IODriverInput(void*handle,void*driverContext)
 {
 	COPCUAMaster *pOPCMaster  = (COPCUAMaster *)driverContext;
+	OPCUA_DIAG_HOST_CALL(pOPCMaster, "IODriverInput");
 	int ret = pOPCMaster->Input(handle);
 	
 	return ret;
@@ -112,6 +136,7 @@ int  IODriverInput(void*handle,void*driverContext)
 int  IODriverOutput(void*handle,void*driverContext)
 {
 	COPCUAMaster *pOPCMaster  = (COPCUAMaster *)driverContext;
+	OPCUA_DIAG_HOST_CALL(pOPCMaster, "IODriverOutput");
 	int ret = pOPCMaster->Output(handle);
 	
 	return ret;
@@ -121,6 +146,7 @@ bool IODriverGrpTagInfo(void*driverContext, intptr_t*& pGrpTagBuf, int& iCount)
 {
 	COPCUAMaster *pMaster = (COPCUAMaster *)driverContext;
 	int iGrpSize = pMaster->m_OPCSlaveArray.GetSize();
+	OPCUA_DIAG_HOST_CALL(pMaster, "IODriverGrpTagInfo");
 
 	//intptr_t* pGrpTagBufLocal = NULL;
 	char* pGrpTagSubBuf = NULL;//单个sGROUPTAG的大小
@@ -251,6 +277,7 @@ bool  IODriverStatus(void*driverContext, void* pDriverMessage)
 	COPCUAMaster *pMaster = (COPCUAMaster *)driverContext;
 
 	DriverMessage *pMessage = (DriverMessage*)pDriverMessage;
+	OPCUA_DIAG_HOST_CALL(pMaster, "IODriverStatus");
 
 	pMessage->iStatus = pMaster->m_iDevStatus;
 	ProtocolLogUtil logUtil;
@@ -263,6 +290,7 @@ void  IODriverMasterRun(void*driverContext)
 
 	COPCUAMaster *pMaster = (COPCUAMaster *)driverContext;
 	//pMaster->PollSlave();
+	OPCUA_DIAG_HOST_CALL(pMaster, "IODriverMasterRun");
 	if (DEVSTATUS_ALLERR == pMaster->m_iDevStatus)
 	{
 		pMaster->UAServerRun();
@@ -275,6 +303,7 @@ void  IODriverAddTag(void*handle, void*driverContext)
 {
 	CIODriverManager *pCIODriverManager = (CIODriverManager*)handle;
 	COPCUAMaster *pMaster = (COPCUAMaster *)driverContext;
+	OPCUA_DIAG_HOST_CALL(pMaster, "IODriverAddTag");
 
 	//opc da server不统计授权
 	for (int i = 0; i < pMaster->m_tagNumerI; i++)
