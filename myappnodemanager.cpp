@@ -536,13 +536,23 @@ void MyAppNodeManager::onScan(const UaDateTime& time)
 				varStatus = dv.statusCode();
 				varValue = UaVariant(*dv.value()).toString();
 			}
+			// read the tag memory directly, the same call Output() uses, to see whether the
+			// host keeps it fresh even though it never calls IODriverOutput
+			double memValue = 0;
+			unsigned int memQuality = 0;
+			char memStr[MAX_TAGSTRINGVALUE_LEN] = { 0 };
+			if (DT_STRING == pDiagTag->m_pTag->type)
+				pDiagTag->m_pTag->ReadTagFromMem(memStr, memQuality, pDiagTag->m_pTag->type);
+			else
+				pDiagTag->m_pTag->ReadTagFromMem(memValue, memQuality, pDiagTag->m_pTag->type);
 			_snprintf(diagLines[diagDetail], sizeof(diagLines[0]) - 1,
-				"[DIAG onScan] tag[%d] %s: qualityO=0x%02X (IN_OK=%d), auth=%d, uaVar=%p, uaStatus=0x%08X, uaValue=%s",
+				"[DIAG onScan] tag[%d] %s: qualityO=0x%02X (IN_OK=%d), auth=%d, uaVar=%p, uaStatus=0x%08X, uaValue=%s, mem=%f/%s memQuality=0x%X (OK=%d)",
 				i, pDiagTag->m_pTag->name,
 				(unsigned char)pCOPCUAMaster->m_dataQualityO[i],
 				(pCOPCUAMaster->m_dataQualityO[i] & TAG_IO_TAGQUALITY_IN_OK) ? 1 : 0,
 				pDiagTag->m_pTag->m_bAuthorizationFlag ? 1 : 0,
-				pDiagVar, varStatus, varValue.toUtf8());
+				pDiagVar, varStatus, varValue.toUtf8(),
+				memValue, memStr, memQuality, (memQuality & WRITEONETAG_TAGQUALITY_OK) ? 1 : 0);
 			diagLines[diagDetail][sizeof(diagLines[0]) - 1] = 0;
 			diagDetail++;
 		}

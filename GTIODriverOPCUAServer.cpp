@@ -278,6 +278,20 @@ bool  IODriverStatus(void*driverContext, void* pDriverMessage)
 
 	DriverMessage *pMessage = (DriverMessage*)pDriverMessage;
 	OPCUA_DIAG_HOST_CALL(pMaster, "IODriverStatus");
+#if OPCUA_DIAG_LOG
+	{
+		// the old driver thread only exchanged data when m_isMaster() was true
+		static DWORD s_t = 0;
+		static bool s_f = true;
+		if (OpcUaDiagDue(s_t, s_f))
+		{
+			char szDiag[512];
+			int isMaster = (NULL == pMaster->m_isMaster) ? -1 : (pMaster->m_isMaster() ? 1 : 0);
+			sprintf(szDiag, "[DIAG Status] isMaster()=%d (-1=null), m_iDevStatus=%d", isMaster, (int)pMaster->m_iDevStatus);
+			pMaster->m_pSetLogInfo(pMaster->m_handle, INFOTYPE_RUN, pMaster->m_log_Source, szDiag, szDiag, true, true);
+		}
+	}
+#endif
 
 	pMessage->iStatus = pMaster->m_iDevStatus;
 	ProtocolLogUtil logUtil;
