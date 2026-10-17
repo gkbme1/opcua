@@ -24,6 +24,25 @@ class COPCUAFrame;
 #include "myappnodemanager.h"
 #include "myappcallback.h"
 #pragma comment(lib, "comsuppw.lib")
+
+// Diagnostic logging for the "BadWaitingForInitialData / no refresh" issue.
+// Set OPCUA_DIAG_LOG to 0 to disable all diag output.
+#define OPCUA_DIAG_LOG 1
+#define OPCUA_DIAG_INTERVAL_MS 10000   // at most one diag batch per 10s per call site
+#define OPCUA_DIAG_TAG_DETAIL 5        // number of tags printed in detail
+
+// Returns true on the first call and then at most once per OPCUA_DIAG_INTERVAL_MS.
+inline bool OpcUaDiagDue(DWORD& lastTick, bool& first)
+{
+	DWORD now = GetTickCount();
+	if (first || now - lastTick >= OPCUA_DIAG_INTERVAL_MS)
+	{
+		first = false;
+		lastTick = now;
+		return true;
+	}
+	return false;
+}
 class COPCUAMaster //: public CLightThread
 {
 public:

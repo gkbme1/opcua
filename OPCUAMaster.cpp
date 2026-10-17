@@ -986,6 +986,15 @@ int COPCUAMaster::Output(void *handle)
 	//write data to DataO
 	//int offset=0;
 	char *IOMem = m_dataO;
+#if OPCUA_DIAG_LOG
+	static DWORD s_diagTick = 0;
+	static bool s_diagFirst = true;
+	static unsigned int s_outputCalls = 0;
+	s_outputCalls++;
+	bool bDiag = OpcUaDiagDue(s_diagTick, s_diagFirst);
+	int diagReached = 0, diagInOk = 0, diagQualityBad = 0, diagAuthFail = 0, diagDetail = 0;
+	char diagLines[OPCUA_DIAG_TAG_DETAIL][512];
+#endif
 EnterCriticalSection(&m_criticalIOMemAccess);
 char *IOQuality = m_dataQualityO;
 	for(int i=0;i<(int)m_tagNumerO;i++)
@@ -1107,6 +1116,24 @@ char *IOQuality = m_dataQualityO;
 		//offset+=pTag->size-1;//pTag->size含1byte的质量位			
 
 //第三步，质量位信息
+#if OPCUA_DIAG_LOG
+		if (bDiag)
+		{
+			diagReached++;
+			if (!(quality & WRITEONETAG_TAGQUALITY_OK)) diagQualityBad++;
+			if (!pTag->m_bAuthorizationFlag) diagAuthFail++;
+			if ((quality & WRITEONETAG_TAGQUALITY_OK) && pTag->m_bAuthorizationFlag) diagInOk++;
+			if (diagDetail < OPCUA_DIAG_TAG_DETAIL)
+			{
+				_snprintf(diagLines[diagDetail], sizeof(diagLines[0]) - 1,
+					"[DIAG Output] tag[%d] %s: rdbQuality=0x%X (OK=%d), auth=%d, value=%f, str=%s",
+					i, pTag->name, quality, (quality & WRITEONETAG_TAGQUALITY_OK) ? 1 : 0,
+					pTag->m_bAuthorizationFlag ? 1 : 0, value, strValue);
+				diagLines[diagDetail][sizeof(diagLines[0]) - 1] = 0;
+				diagDetail++;
+			}
+		}
+#endif
 		if ((quality&WRITEONETAG_TAGQUALITY_OK) && pTag->m_bAuthorizationFlag)
 		{
 			IOQuality[i] |= TAG_IO_TAGQUALITY_IN_OK;
@@ -1125,6 +1152,19 @@ char *IOQuality = m_dataQualityO;
 		}
 	}
 LeaveCriticalSection(&m_criticalIOMemAccess);
+#if OPCUA_DIAG_LOG
+	if (bDiag)
+	{
+		// tags not "reached" were skipped by a continue (RW + RWRDBFailed, ForceUpdateRDBbyValue, range conversion unchanged)
+		char szDiag[512];
+		sprintf(szDiag, "[DIAG Output] calls=%u, tagNumerO=%u, reached=%d, IN_OK=%d, rdbQualityBad=%d, authFail=%d, RWRDBFailed=%d",
+			s_outputCalls, m_tagNumerO, diagReached, diagInOk, diagQualityBad, diagAuthFail,
+			pCIODriverManager->m_RWRDBFailed ? 1 : 0);
+		m_pSetLogInfo(m_handle, INFOTYPE_RUN, m_log_Source, szDiag, szDiag, true, true);
+		for (int d = 0; d < diagDetail; d++)
+			m_pSetLogInfo(m_handle, INFOTYPE_RUN, m_log_Source, diagLines[d], diagLines[d], true, true);
+	}
+#endif
 	return 1;//succ++
 }
 

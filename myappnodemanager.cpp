@@ -181,6 +181,9 @@ bool MyAppNodeManager::onConfigure()
 
 	UaMutexRefCounted* pSharedMutex = new UaMutexRefCounted;
 	COPCUAMaster *pCOPCUAMaster = (COPCUAMaster*)m_OPCUAMasterHandele;
+#if OPCUA_DIAG_LOG
+	int diagVarCount = 0;
+#endif
 	for (int i = 0;i<pCOPCUAMaster->m_OPCSlaveArray.GetSize();i++)
 	{
 
@@ -199,7 +202,14 @@ bool MyAppNodeManager::onConfigure()
 		//UaNodeId groupId(ustrNodeName, getNameSpaceIndex());
 		UaNodeId groupId(ustrNodeName, getNameSpaceIndex());
 		if (!this->addFolder(groupId, ustrNodeName))
+		{
+#if OPCUA_DIAG_LOG
+			char szDiag[512];
+			sprintf(szDiag, "[DIAG onConfigure] addFolder failed: group=%s -> onConfigure returns false, scan thread will NOT start", pCOPCUASlave->m_grpName);
+			pCOPCUAMaster->m_pSetLogInfo(pCOPCUAMaster->m_handle, INFOTYPE_ERR, pCOPCUAMaster->m_log_Source, szDiag, szDiag, true, true);
+#endif
 			return false;
+		}
 
 		//AE×é
 		if (AEFromDriver == pCOPCUASlave->m_OPCGroupType)
@@ -376,11 +386,24 @@ bool MyAppNodeManager::onConfigure()
 
 			pCOPCUATag->m_handle_UaVariable = uaVariable;
 			uaVariable->m_handle_COPCTag = pCOPCUATag;
+#if OPCUA_DIAG_LOG
+			diagVarCount++;
+#endif
 
 		}
 	}
 
 	pSharedMutex->releaseReference();
+
+#if OPCUA_DIAG_LOG
+	{
+		char szDiag[512];
+		sprintf(szDiag, "[DIAG onConfigure] OK: groups=%d, variables=%d, tagNumerI=%u, tagNumerO=%u, scanRate(m_cc)=%d ms",
+			pCOPCUAMaster->m_OPCSlaveArray.GetSize(), diagVarCount,
+			pCOPCUAMaster->m_tagNumerI, pCOPCUAMaster->m_tagNumerO, pCOPCUAMaster->m_cc);
+		pCOPCUAMaster->m_pSetLogInfo(pCOPCUAMaster->m_handle, INFOTYPE_RUN, pCOPCUAMaster->m_log_Source, szDiag, szDiag, true, true);
+	}
+#endif
 
 	//pNode = findNode(UaNodeId(3, getNameSpaceIndex()));
 	//if (pNode)
@@ -418,11 +441,29 @@ bool MyAppNodeManager::onConfigure()
 void MyAppNodeManager::onScan(const UaDateTime& time)
 {
 	COPCUAMaster *pCOPCUAMaster = (COPCUAMaster*)m_OPCUAMasterHandele;
+#if OPCUA_DIAG_LOG
+	static DWORD s_diagTick = 0;
+	static bool s_diagFirst = true;
+	static unsigned int s_scanCount = 0;
+	s_scanCount++;
+	bool bDiag = OpcUaDiagDue(s_diagTick, s_diagFirst);
+	int diagInOk = 0, diagAuthFail = 0, diagNullVar = 0, diagDetail = 0;
+	char diagLines[OPCUA_DIAG_TAG_DETAIL][512];
+#endif
 	EnterCriticalSection(&pCOPCUAMaster->m_criticalIOMemAccess);
 	
 	OpcUa_StatusCode opcUa_StatusCode = OpcUa_Good;
 	for (int i = 0; i < (int)pCOPCUAMaster->m_tagNumerO; i++)
 	{
+#if OPCUA_DIAG_LOG
+		if (bDiag)
+		{
+			COPCUATag *pDiagTag = pCOPCUAMaster->m_OPCTagO[i];
+			if (pCOPCUAMaster->m_dataQualityO[i] & TAG_IO_TAGQUALITY_IN_OK) diagInOk++;
+			if (!pDiagTag->m_pTag->m_bAuthorizationFlag) diagAuthFail++;
+			if (NULL == pDiagTag->m_handle_UaVariable) diagNullVar++;
+		}
+#endif
 		if (pCOPCUAMaster->m_dataQualityO[i] & TAG_IO_TAGQUALITY_IN_OK)
 		{
 			opcUa_StatusCode = OpcUa_Good;
@@ -480,7 +521,47 @@ void MyAppNodeManager::onScan(const UaDateTime& time)
 		}
 	}
 
+#if OPCUA_DIAG_LOG
+	if (bDiag)
+	{
+		for (int i = 0; i < (int)pCOPCUAMaster->m_tagNumerO && diagDetail < OPCUA_DIAG_TAG_DETAIL; i++)
+		{
+			COPCUATag *pDiagTag = pCOPCUAMaster->m_OPCTagO[i];
+			UaGatewayVariable* pDiagVar = (UaGatewayVariable*)pDiagTag->m_handle_UaVariable;
+			OpcUa_StatusCode varStatus = OpcUa_BadInternalError;
+			UaString varValue("<null variable>");
+			if (NULL != pDiagVar)
+			{
+				UaDataValue dv = pDiagVar->getValue();
+				varStatus = dv.statusCode();
+				varValue = UaVariant(*dv.value()).toString();
+			}
+			_snprintf(diagLines[diagDetail], sizeof(diagLines[0]) - 1,
+				"[DIAG onScan] tag[%d] %s: qualityO=0x%02X (IN_OK=%d), auth=%d, uaVar=%p, uaStatus=0x%08X, uaValue=%s",
+				i, pDiagTag->m_pTag->name,
+				(unsigned char)pCOPCUAMaster->m_dataQualityO[i],
+				(pCOPCUAMaster->m_dataQualityO[i] & TAG_IO_TAGQUALITY_IN_OK) ? 1 : 0,
+				pDiagTag->m_pTag->m_bAuthorizationFlag ? 1 : 0,
+				pDiagVar, varStatus, varValue.toUtf8());
+			diagLines[diagDetail][sizeof(diagLines[0]) - 1] = 0;
+			diagDetail++;
+		}
+	}
+#endif
+
 	LeaveCriticalSection(&pCOPCUAMaster->m_criticalIOMemAccess);
+
+#if OPCUA_DIAG_LOG
+	if (bDiag)
+	{
+		char szDiag[512];
+		sprintf(szDiag, "[DIAG onScan] scanCount=%u, scanRate=%u ms, tagNumerO=%u, IN_OK=%d, authFail=%d, nullUaVar=%d",
+			s_scanCount, scanRate(), pCOPCUAMaster->m_tagNumerO, diagInOk, diagAuthFail, diagNullVar);
+		pCOPCUAMaster->m_pSetLogInfo(pCOPCUAMaster->m_handle, INFOTYPE_RUN, pCOPCUAMaster->m_log_Source, szDiag, szDiag, true, true);
+		for (int d = 0; d < diagDetail; d++)
+			pCOPCUAMaster->m_pSetLogInfo(pCOPCUAMaster->m_handle, INFOTYPE_RUN, pCOPCUAMaster->m_log_Source, diagLines[d], diagLines[d], true, true);
+	}
+#endif
 	
 	//OpcUa_Boolean bActive = OpcUa_True;
 	//EventManagerBase* pEventManager = getEventManagerUaNode();
@@ -546,7 +627,10 @@ void MyAppNodeManager::onWrite(
 		{
 			OpcUa_Double opcUa_Double;
 			if (OpcUa_IsNotGood(value.toDouble(opcUa_Double)))
+			{
+				LeaveCriticalSection(&pCOPCUAMaster->m_criticalIOMemAccess);
 				return;
+			}
 
 			pVariable->setValue(value, UaDateTime::now());
 			pTag->WriteTagHex(pCOPCUAMaster->m_dataI + pCOPCUATag->m_offset / 8, opcUa_Double, pCOPCUATag->m_offset % 8);
