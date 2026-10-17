@@ -698,6 +698,21 @@ int COPCUAMaster::Input(void *handle)
 	CIODriverManager *pCIODriverManager = (CIODriverManager*)handle;
 	//m_bSlaveServerEnable = pCIODriverManager->m_bSlaveServerEnable;
 	bool RWRDBFailed = pCIODriverManager->m_RWRDBFailed;
+#if OPCUA_DIAG_LOG
+	{
+		static DWORD s_entryTick = 0;
+		static bool s_entryFirst = true;
+		static unsigned int s_entryCalls = 0;
+		s_entryCalls++;
+		if (OpcUaDiagDue(s_entryTick, s_entryFirst))
+		{
+			char szDiag[512];
+			sprintf(szDiag, "[DIAG Input-entry] calls=%u, tagNumerI=%u, RWRDBFailed=%d",
+				s_entryCalls, m_tagNumerI, RWRDBFailed ? 1 : 0);
+			m_pSetLogInfo(m_handle, INFOTYPE_RUN, m_log_Source, szDiag, szDiag, true, true);
+		}
+	}
+#endif
 	unsigned int nWriteDDBIndex = pCIODriverManager->m_nWriteDDBIndex;
 	for(int i=0;i<(int)m_tagNumerI;i++)
 	{
@@ -956,6 +971,23 @@ int COPCUAMaster::Output(void *handle)
 		bReadToDDB = pCIODriverManager->m_pRDBDriverManage->m_bReadToDDB;
 	}
 	unsigned int nWriteDDBIndex = pCIODriverManager->m_nWriteDDBIndex;
+#if OPCUA_DIAG_LOG
+	{
+		// logged before any early return, to prove the host actually calls Output()
+		static DWORD s_entryTick = 0;
+		static bool s_entryFirst = true;
+		static unsigned int s_entryCalls = 0;
+		s_entryCalls++;
+		if (OpcUaDiagDue(s_entryTick, s_entryFirst))
+		{
+			char szDiag[512];
+			sprintf(szDiag, "[DIAG Output-entry] calls=%u, pRDBDriverManage=%p, bReadToDDB=%d, RWRDBFailed=%d, tagNumerO=%u",
+				s_entryCalls, pCIODriverManager->m_pRDBDriverManage, bReadToDDB ? 1 : 0,
+				pCIODriverManager->m_RWRDBFailed ? 1 : 0, m_tagNumerO);
+			m_pSetLogInfo(m_handle, INFOTYPE_RUN, m_log_Source, szDiag, szDiag, true, true);
+		}
+	}
+#endif
 	if (!bReadToDDB)
 	{		
 		for (int i = 0; i < m_OPCSlaveArray.GetSize(); i++)
