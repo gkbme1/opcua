@@ -450,6 +450,22 @@ void MyAppNodeManager::onScan(const UaDateTime& time)
 	int diagInOk = 0, diagAuthFail = 0, diagNullVar = 0, diagDetail = 0;
 	char diagLines[OPCUA_DIAG_TAG_DETAIL][512];
 #endif
+	// The IOServer host may never call IODriverOutput for this driver (observed: it keeps the
+	// tag memory fresh but skips Output()), so m_dataO / m_dataQualityO would never be filled.
+	// If Output() has not been called within the last 10s, pull the values from tag memory here.
+	DWORD dwLastOutput = pCOPCUAMaster->m_dwLastOutputTick;
+	bool bPullFromMem = (0 == dwLastOutput) || (GetTickCount() - dwLastOutput > 10000);
+	static int s_lastPullMode = -1;
+	if (s_lastPullMode != (bPullFromMem ? 1 : 0))
+	{
+		s_lastPullMode = bPullFromMem ? 1 : 0;
+		char szInfo[256];
+		sprintf(szInfo, bPullFromMem ?
+			"IODriverOutput not called by host, OPC UA values are read from tag memory." :
+			"IODriverOutput called by host, OPC UA values come from Output().");
+		pCOPCUAMaster->m_pSetLogInfo(pCOPCUAMaster->m_handle, INFOTYPE_RUN, pCOPCUAMaster->m_log_Source, szInfo, szInfo, true, true);
+	}
+
 	EnterCriticalSection(&pCOPCUAMaster->m_criticalIOMemAccess);
 	
 	OpcUa_StatusCode opcUa_StatusCode = OpcUa_Good;
@@ -464,6 +480,32 @@ void MyAppNodeManager::onScan(const UaDateTime& time)
 			if (NULL == pDiagTag->m_handle_UaVariable) diagNullVar++;
 		}
 #endif
+		if (bPullFromMem)
+		{
+			COPCUATag *pPullTag = pCOPCUAMaster->m_OPCTagO[i];
+			CTag *pPull = pPullTag->m_pTag;
+			double pullValue = 0;
+			unsigned int pullQuality = 0;
+			char pullStr[MAX_TAGSTRINGVALUE_LEN] = { 0 };
+			if (DT_STRING == pPull->type)
+				pPull->ReadTagFromMem(pullStr, pullQuality, pPull->type);
+			else
+				pPull->ReadTagFromMem(pullValue, pullQuality, pPull->type);
+
+			if ((pullQuality & WRITEONETAG_TAGQUALITY_OK) && pPull->m_bAuthorizationFlag)
+			{
+				pCOPCUAMaster->m_dataQualityO[i] |= TAG_IO_TAGQUALITY_IN_OK;
+				if (DT_STRING == pPull->type)
+					pPull->WriteTagHex(pCOPCUAMaster->m_dataO + pPullTag->m_offset / 8, pullStr);
+				else
+					pPull->WriteTagHex(pCOPCUAMaster->m_dataO + pPullTag->m_offset / 8, pullValue, pPullTag->m_offset % 8);
+			}
+			else
+			{
+				pCOPCUAMaster->m_dataQualityO[i] &= ~TAG_IO_TAGQUALITY_IN_OK;
+			}
+		}
+
 		if (pCOPCUAMaster->m_dataQualityO[i] & TAG_IO_TAGQUALITY_IN_OK)
 		{
 			opcUa_StatusCode = OpcUa_Good;
@@ -518,6 +560,15 @@ void MyAppNodeManager::onScan(const UaDateTime& time)
 		else
 		{
 			opcUa_StatusCode = OpcUa_Bad;
+			COPCUATag *pBadTag = pCOPCUAMaster->m_OPCTagO[i];
+			UaGatewayVariable* pBadVar = (UaGatewayVariable*)pBadTag->m_handle_UaVariable;
+			if (NULL != pBadVar && OpcUa_IsGood(pBadVar->getValue().statusCode()))
+			{
+				UaVariant lastValue;
+				pBadVar->getValue(lastValue);
+				pBadVar->setValue(lastValue, time, OpcUa_BadNoCommunication);
+				pBadTag->m_dbValue = 0xFFFFFFFF;// force the change-only path to republish Good when quality recovers
+			}
 		}
 	}
 
@@ -546,13 +597,14 @@ void MyAppNodeManager::onScan(const UaDateTime& time)
 			else
 				pDiagTag->m_pTag->ReadTagFromMem(memValue, memQuality, pDiagTag->m_pTag->type);
 			_snprintf(diagLines[diagDetail], sizeof(diagLines[0]) - 1,
-				"[DIAG onScan] tag[%d] %s: qualityO=0x%02X (IN_OK=%d), auth=%d, uaVar=%p, uaStatus=0x%08X, uaValue=%s, mem=%f/%s memQuality=0x%X (OK=%d)",
+				"[DIAG onScan] tag[%d] %s: memQuality=0x%X (OK=%d), mem=%f/%s, qualityO=0x%02X (IN_OK=%d), uaStatus=0x%08X, uaValue=%s, auth=%d, uaVar=%p",
 				i, pDiagTag->m_pTag->name,
+				memQuality, (memQuality & WRITEONETAG_TAGQUALITY_OK) ? 1 : 0,
+				memValue, memStr,
 				(unsigned char)pCOPCUAMaster->m_dataQualityO[i],
 				(pCOPCUAMaster->m_dataQualityO[i] & TAG_IO_TAGQUALITY_IN_OK) ? 1 : 0,
-				pDiagTag->m_pTag->m_bAuthorizationFlag ? 1 : 0,
-				pDiagVar, varStatus, varValue.toUtf8(),
-				memValue, memStr, memQuality, (memQuality & WRITEONETAG_TAGQUALITY_OK) ? 1 : 0);
+				varStatus, varValue.toUtf8(),
+				pDiagTag->m_pTag->m_bAuthorizationFlag ? 1 : 0, pDiagVar);
 			diagLines[diagDetail][sizeof(diagLines[0]) - 1] = 0;
 			diagDetail++;
 		}

@@ -84,6 +84,7 @@ public:
 	CTagHash m_tagHashIO;//用于快速定位
 	DWORD m_tagNumerI;//
 	DWORD m_tagNumerO;//
+	volatile DWORD m_dwLastOutputTick;// GetTickCount() of the last host call to Output(), 0 = never called
 	DWORD m_tagOffsetI;//bits
 	DWORD m_tagOffsetO;//bits
 

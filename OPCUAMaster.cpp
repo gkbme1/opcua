@@ -73,6 +73,7 @@ COPCUAMaster::COPCUAMaster()
 	m_handle = 0;
 	m_tagNumerI = 0;
 	m_tagNumerO = 0;
+	m_dwLastOutputTick = 0;
 	m_tagOffsetI = 0;
 	m_tagOffsetO = 0;
 	m_cycleCounter = 0;
@@ -960,6 +961,8 @@ int COPCUAMaster::Input(void *handle)
 
 int COPCUAMaster::Output(void *handle)
 {
+	m_dwLastOutputTick = GetTickCount();
+	if (0 == m_dwLastOutputTick) m_dwLastOutputTick = 1;
 
 	if(m_autosimulateAutoInc)
 		autoInc++;
